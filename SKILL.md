@@ -1,10 +1,11 @@
 ---
 name: xiaoyuzhou-podcast
+version: 1.0.0
 description: 获取小宇宙（xiaoyuzhoufm.com）播客节目内容：查找最新一期、下载音频、本地转写（faster-whisper）、生成结构化总结。触发词：小宇宙、小宇宙播客、忽左忽右、播客转写、播客总结、获取播客内容、下载播客。不适用：非小宇宙平台（Spotify/Apple Podcasts 等）；需要实时内容（转写需 15-30 分钟）。
 tags: [podcast, xiaoyuzhou, transcription, audio, whisper]
 ---
 
-# xiaoyuzhou-podcast V1
+# xiaoyuzhou-podcast 1.0.0
 
 > 小宇宙播客内容获取、转写与总结工具。  
 > 核心路径：iTunes API → RSS Feed → 音频下载 → faster-whisper 本地转写 → LLM 结构化总结
@@ -208,4 +209,4 @@ python3 scripts/transcribe.py \
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| V1 | 2026-04-08 | 初版：iTunes → RSS → faster-whisper 完整链路 |
+| 1.0.0 | 2026-04-08 | 初版：iTunes → RSS → faster-whisper 完整链路 |
