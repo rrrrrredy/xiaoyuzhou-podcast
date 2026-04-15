@@ -1,4 +1,5 @@
 __pycache__/
+<<<<<<< HEAD
 *.pyc
 *.pyo
 .env
@@ -6,3 +7,26 @@ __pycache__/
 dist/
 build/
 
+=======
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+node_modules/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+*.log
+*.tmp
+*.cache
+>>>>>>> 5920870 (Add README, LICENSE (MIT), and .gitignore)
