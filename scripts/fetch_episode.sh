@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# fetch_episode.sh — Step 1-4：查 RSS URL → 下载 XML → 解析最新一期 → 下载音频
+# fetch_episode.sh — Step 1-4：查 RSS URL → 获取 XML → 解析最新一期 → 临时获取音频
 # 用法：bash fetch_episode.sh "<播客名>"
 # 示例：bash fetch_episode.sh "忽左忽右"
 #
 # 输出文件：
 #   /tmp/podcast_feed.xml        RSS XML
-#   /tmp/podcast_episode.m4a     最新一期音频
+#   /tmp/podcast_episode.m4a     最新一期临时音频缓存
 #   /tmp/podcast_episode_info.txt 标题/时长/音频URL
 
 set -euo pipefail
@@ -61,9 +61,9 @@ echo ""
 echo "✅ 找到 RSS Feed: ${FEED_URL}"
 
 echo ""
-echo "=== Step 2: 下载 RSS XML（走上游代理）==="
+echo "=== Step 2: 获取 RSS XML（走上游代理）==="
 curl ${PROXY:+-x "${PROXY}"} -L "${FEED_URL}" -o "${FEED_XML}" --silent --show-error
-echo "✅ RSS 下载完成，大小: $(wc -c < "${FEED_XML}") bytes"
+echo "✅ RSS 获取完成，大小: $(wc -c < "${FEED_XML}") bytes"
 
 echo ""
 echo "=== Step 3: 解析最新一期 ==="
@@ -110,16 +110,17 @@ with open("/tmp/_podcast_audio_url.txt", "w") as f:
 PYEOF
 
 echo ""
-echo "=== Step 4: 下载音频（走上游代理）==="
+echo "=== Step 4: 临时获取音频（走上游代理）==="
 AUDIO_URL=$(cat /tmp/_podcast_audio_url.txt)
 echo "音频 URL: ${AUDIO_URL}"
-echo "⚠️  下载中，文件约 50-200MB，请稍候..."
+echo "⚠️  临时获取中，文件约 50-200MB，请稍候..."
 curl ${PROXY:+-x "${PROXY}"} -L "${AUDIO_URL}" -o "${AUDIO_OUT}" --progress-bar
 
 echo ""
 echo "✅ 全部完成！"
 echo "   RSS XML      : ${FEED_XML}"
-echo "   音频文件     : ${AUDIO_OUT}"
+echo "   临时音频缓存 : ${AUDIO_OUT}"
 echo "   剧集信息     : ${INFO_OUT}"
 echo ""
 echo "下一步: python3 scripts/transcribe.py ${AUDIO_OUT} /tmp/podcast_transcript.txt"
+echo "转写确认后，如不需要保留音频，请删除临时缓存: rm -f ${AUDIO_OUT} /tmp/_podcast_audio_url.txt"

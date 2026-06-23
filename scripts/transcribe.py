@@ -25,6 +25,19 @@ import os
 import time
 import argparse
 
+
+def _configure_stdio() -> None:
+    """Prefer UTF-8 output on Windows consoles that default to GBK."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
+
+_configure_stdio()
+
+
 def install_faster_whisper():
     """首次运行时自动安装 faster-whisper"""
     try:

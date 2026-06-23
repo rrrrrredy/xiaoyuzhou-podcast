@@ -1,14 +1,12 @@
 ---
 name: xiaoyuzhou-podcast
-version: 1.0.0
-description: 获取小宇宙（xiaoyuzhoufm.com）播客节目内容：查找最新一期、下载音频、本地转写（faster-whisper）、生成结构化总结。触发词：小宇宙、小宇宙播客、忽左忽右、播客转写、播客总结、获取播客内容、下载播客。不适用：非小宇宙平台（Spotify/Apple Podcasts 等）；需要实时内容（转写需 15-30 分钟）。
-tags: [podcast, xiaoyuzhou, transcription, audio, whisper]
+description: Use when the user needs to fetch public RSS metadata, temporarily retrieve audio for transcription, inspect, transcribe, or summarize public Xiaoyuzhou podcast episodes from show or episode URLs. Trigger for 小宇宙播客, public podcast audio transcription, RSS/feed discovery, faster-whisper transcription, and episode summaries. Not for paid/member-only episodes, persistent audio downloading, or bypassing access controls.
 ---
 
 # xiaoyuzhou-podcast 1.0.0
 
 > 小宇宙播客内容获取、转写与总结工具。  
-> 核心路径：iTunes API → RSS Feed → 音频下载 → faster-whisper 本地转写 → LLM 结构化总结
+> 核心路径：iTunes API → RSS Feed → 临时获取音频 → faster-whisper 本地转写 → LLM 结构化总结
 
 ---
 
@@ -34,7 +32,7 @@ tags: [podcast, xiaoyuzhou, transcription, audio, whisper]
 | 5 | 转写耗时超长 | small 模型转写 80 分钟音频约需 **15-30 分钟** CPU 时间，提前告知用户 |
 | 6 | 小宇宙节目 ID 不可靠 | 不要直接构造 `xiaoyuzhoufm.com/podcasts/<id>` URL 去抓取，通过 iTunes API → feedUrl 是唯一可信路径 |
 | 7 | yt-dlp 对小宇宙 URL 返回 404 | SPA 限制，不可用，勿尝试 |
-| 8 | RSS 中 `<enclosure>` 音频 URL 需要跟随重定向 | `curl` 加 `-L` 参数，否则下载得到 302 页面 |
+| 8 | RSS 中 `<enclosure>` 音频 URL 需要跟随重定向 | `curl` 加 `-L` 参数，否则只会得到 302 页面 |
 
 ---
 
@@ -45,7 +43,7 @@ tags: [podcast, xiaoyuzhou, transcription, audio, whisper]
 - A working HTTP proxy (set `HTTP_PROXY` env var) if RSS feeds are blocked
 - `curl`、`python3` 已安装
 - `faster-whisper` 已安装（首次运行 Step 5 时自动 pip install）
-- 磁盘空间：音频文件约 50-200MB
+- 磁盘空间：临时音频缓存约 50-200MB，转写完成后默认删除或让用户确认是否保留
 
 ---
 
@@ -72,13 +70,13 @@ for r in data['results']:
 
 ---
 
-### Step 2：下载 RSS XML（必须走上游代理）
+### Step 2：获取 RSS XML（必须走上游代理）
 
 ```bash
 FEED_URL="https://feeds.simplecast.com/xxxxxxxx"  # 替换为上一步获取的 feedUrl
 
 curl ${HTTP_PROXY:+-x $HTTP_PROXY} -L "${FEED_URL}" -o /tmp/podcast_feed.xml
-echo "RSS 下载完成，大小: $(wc -c < /tmp/podcast_feed.xml) bytes"
+echo "RSS 获取完成，大小: $(wc -c < /tmp/podcast_feed.xml) bytes"
 ```
 
 ---
@@ -112,7 +110,7 @@ print(f"音频URL: {audio_url}")
 
 ---
 
-### Step 4：下载音频（必须走上游代理）
+### Step 4：临时获取音频（必须走上游代理）
 
 ```bash
 AUDIO_URL="<上一步输出的音频URL>"
@@ -120,7 +118,7 @@ AUDIO_URL="<上一步输出的音频URL>"
 curl ${HTTP_PROXY:+-x $HTTP_PROXY} -L "${AUDIO_URL}" \
      -o /tmp/podcast_episode.m4a \
      --progress-bar
-echo "音频下载完成"
+echo "临时音频缓存完成"
 ```
 
 > ⚠️ 文件体积约 50-200MB，请确认磁盘空间足够。
@@ -157,6 +155,12 @@ with open("/tmp/podcast_transcript.txt", "w", encoding="utf-8") as f:
 print("\n✅ 转写完成 →", "/tmp/podcast_transcript.txt")
 ```
 
+转写完成并确认文本可用后，默认只保留 transcript；除非用户明确要求保留音频缓存，否则删除临时音频：
+
+```bash
+rm -f /tmp/podcast_episode.m4a /tmp/_podcast_audio_url.txt
+```
+
 > ⚠️ **耗时警告**：small 模型转写 80 分钟音频约需 15-30 分钟 CPU 时间。  
 > 转写质量不足时换 `medium` 模型（耗时加倍）。
 
@@ -185,7 +189,7 @@ print("\n✅ 转写完成 →", "/tmp/podcast_transcript.txt")
 ## 快速入口（一键脚本）
 
 ```bash
-# 一键获取并下载最新一期（Step 1-4）
+# 一键获取最新一期并临时缓存音频（Step 1-4）
 bash scripts/fetch_episode.sh "忽左忽右"
 
 # 转写（Step 5）
@@ -199,7 +203,7 @@ python3 scripts/transcribe.py \
 
 | 路径 | 说明 |
 |------|------|
-| `scripts/fetch_episode.sh` | Step 1-4 一键脚本：搜索 → 下载 RSS → 解析 → 下载音频 |
+| `scripts/fetch_episode.sh` | Step 1-4 一键脚本：搜索 → 获取 RSS → 解析 → 临时获取音频 |
 | `scripts/transcribe.py` | Step 5：faster-whisper 本地转写 |
 | `references/troubleshooting.md` | 完整踩坑详解与调试指南 |
 

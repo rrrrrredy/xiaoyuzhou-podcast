@@ -126,7 +126,7 @@ yt-dlp "https://www.xiaoyuzhoufm.com/episode/xxxxxxxx"
 ## 坑 8：RSS `<enclosure>` 音频 URL 需要跟随重定向
 
 **现象**：
-直接 `curl "<enclosure url>"` 下载得到一个很小的 HTML 文件（302 页面），不是音频。
+直接 `curl "<enclosure url>"` 只会得到一个很小的 HTML 文件（302 页面），不是音频。
 
 **原因**：
 很多播客托管服务（Simplecast、Buzzsprout 等）的音频 URL 有重定向统计跳转。
@@ -142,7 +142,7 @@ curl ${HTTP_PROXY:+-x $HTTP_PROXY} -L "${AUDIO_URL}" -o /tmp/podcast_episode.m4a
 ## 调试工具清单
 
 ```bash
-# 检查 RSS XML 是否下载正常（看头部几行）
+# 检查 RSS XML 是否获取正常（看头部几行）
 head -50 /tmp/podcast_feed.xml
 
 # 检查 RSS 中有多少剧集
@@ -161,7 +161,7 @@ ffprobe -i /tmp/podcast_episode.m4a -show_entries format=duration -v quiet -of c
 
 ## 已知限制
 
-1. **会员专属剧集**：RSS Feed 通常不包含付费/会员剧集的音频 URL，无法下载
+1. **会员专属剧集**：RSS Feed 通常不包含付费/会员剧集的音频 URL，本 skill 不处理
 2. **仅支持最新一期**：`fetch_episode.sh` 默认只取 `items[0]`，如需历史剧集需修改脚本
 3. **音频格式**：大多数是 `.m4a`，少数可能是 `.mp3`，`faster-whisper` 两者都支持
 4. **中英混合播客**：`language="zh"` 对英文段落准确率下降，可改为 `language=None` 让模型自动检测

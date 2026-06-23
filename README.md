@@ -6,7 +6,7 @@ Xiaoyuzhou (小宇宙) podcast content fetcher, transcriber & summarizer.
 
 ## What It Does
 
-Fetches podcast episodes from Xiaoyuzhou (xiaoyuzhoufm.com) via the iTunes API → RSS feed pipeline, downloads audio, transcribes locally using faster-whisper, and generates structured summaries with key topics, quotes, and timestamps. No browser scraping needed — bypasses the SPA entirely through RSS.
+Fetches public podcast metadata from Xiaoyuzhou (xiaoyuzhoufm.com) via the iTunes API → RSS feed pipeline, temporarily retrieves audio for local faster-whisper transcription, and generates structured summaries with key topics, quotes, and timestamps. No browser scraping needed — uses RSS instead of relying on SPA rendering.
 
 ## Quick Start
 
@@ -16,7 +16,7 @@ openclaw skill install xiaoyuzhou-podcast
 git clone https://github.com/rrrrrredy/xiaoyuzhou-podcast.git ~/.openclaw/skills/xiaoyuzhou-podcast
 ```
 
-One-command fetch + download:
+One-command fetch + temporary audio cache:
 ```bash
 bash scripts/fetch_episode.sh "忽左忽右"
 ```
@@ -28,18 +28,18 @@ python3 scripts/transcribe.py /tmp/podcast_episode.m4a /tmp/podcast_transcript.t
 
 ## Features
 
-- **RSS-based pipeline**: iTunes Search API → RSS feed → audio download (bypasses SPA)
+- **RSS-based pipeline**: iTunes Search API → RSS feed → temporary audio cache (avoids SPA rendering dependency)
 - **Local transcription**: faster-whisper with timestamps, no external API needed
 - **Structured summaries**: topics, key points, keywords, highlight quotes with timestamps
-- **One-click scripts**: `fetch_episode.sh` handles search → download in one command
-- **Proxy-aware**: auto-routes RSS and audio downloads through upstream proxy
+- **One-click scripts**: `fetch_episode.sh` handles search → RSS fetch → temporary audio cache in one command
+- **Proxy-aware**: auto-routes RSS and audio fetches through upstream proxy
 - **Hard stop protection**: auto-stops after 3 failures per step
 
 ## Usage
 
 Trigger with natural language:
 
-- "下载忽左忽右最新一期"
+- "转写忽左忽右最新一期"
 - "小宇宙播客转写"
 - "播客总结" / "获取播客内容"
 - "转写这期播客"
@@ -48,7 +48,7 @@ Trigger with natural language:
 1. Search podcast → get RSS URL (iTunes API, no proxy needed)
 2. Download RSS XML (requires proxy)
 3. Parse latest episode metadata
-4. Download audio file (requires proxy, ~50-200MB)
+4. Temporarily fetch audio file (requires proxy, ~50-200MB)
 5. Transcribe with faster-whisper (~15-30 min for 80 min audio)
 6. Generate structured summary via LLM
 
@@ -58,7 +58,7 @@ Trigger with natural language:
 xiaoyuzhou-podcast/
 ├── SKILL.md                      # Skill definition and full workflow
 ├── scripts/
-│   ├── fetch_episode.sh          # One-click: search → download audio
+│   ├── fetch_episode.sh          # One-click: search → temporary audio cache
 │   ├── setup.sh                  # Dependency setup
 │   └── transcribe.py             # Local faster-whisper transcription
 ├── references/
@@ -72,9 +72,9 @@ xiaoyuzhou-podcast/
 
 - OpenClaw agent runtime
 - Python 3 with `faster-whisper` (`pip install faster-whisper`)
-- `curl` for audio/RSS downloads
+- `curl` for RSS/audio fetching
 - Upstream proxy for RSS feed and audio access
-- ~200MB+ disk space for audio files
+- ~200MB+ temporary disk space for audio cache; delete audio after transcript unless the user asks to keep it
 
 ## License
 
